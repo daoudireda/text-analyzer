@@ -1,0 +1,7 @@
+db.textanalysis.find().pretty()
+db.textanalysis.find().pretty
+help
+db.textanalysis.find().pretty
+show collections
+use text-analyzer-db
+show dbs
