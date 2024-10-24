@@ -12,6 +12,7 @@ import opennlp.tools.langdetect.Language;
 import opennlp.tools.langdetect.LanguageDetector;
 import opennlp.tools.langdetect.LanguageDetectorME;
 import opennlp.tools.langdetect.LanguageDetectorModel;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
@@ -48,27 +49,20 @@ public class TextAnalysisService {
         return textAnalysis;
     }
 
+    @Cacheable("nlpPipeline")
     public StanfordCoreNLP initializePipeline() {
         Properties props = new Properties();
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner");
-
-        // Indiquer le chemin correct pour le modèle POS Tagger
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, sentiment");
         return new StanfordCoreNLP(props);
     }
 
     public String analyseSentiment(String text) {
         Properties properties = this.initializePipeline().getProperties();
         StanfordCoreNLP pipeline = new StanfordCoreNLP(properties);
-
         Annotation annotation = new Annotation(text);
         pipeline.annotate(annotation);
-        String result = "";
-        for (CoreMap sentence : annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
-            result = sentence.get(SentimentCoreAnnotations.SentimentClass.class);
-            System.out.println("Sentiment : " + result + " pour la phrase : " + sentence);
-
-        }
-        return result;
+        CoreMap sentence = annotation.get(CoreAnnotations.SentencesAnnotation.class).getFirst();
+        return sentence.get(SentimentCoreAnnotations.SentimentClass.class);
     }
 
     public String analyseWordFrequency(String text) {
